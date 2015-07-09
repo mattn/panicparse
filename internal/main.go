@@ -29,6 +29,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/kr/pretty"
 	"github.com/maruel/panicparse/Godeps/_workspace/src/github.com/mgutz/ansi"
 	"github.com/maruel/panicparse/internal/imported/terminal"
 	"github.com/maruel/panicparse/stack"
@@ -85,6 +86,8 @@ func Process(in io.Reader, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	cache := &stack.Cache{}
+	cache.Augment(goroutines)
 	buckets := stack.SortBuckets(stack.Bucketize(goroutines, true))
 	srcLen, pkgLen := CalcLengths(buckets)
 	for _, bucket := range buckets {
@@ -104,6 +107,7 @@ func Process(in io.Reader, out io.Writer) error {
 		fmt.Fprintf(out, "%s%d: %s%s%s\n", c, len(bucket.Routines), bucket.State, extra, ansi.Reset)
 		fmt.Fprintf(out, "%s\n", PrettyStack(&bucket.Signature, srcLen, pkgLen))
 	}
+	log.Printf("%# v", pretty.Formatter(buckets[0].Routines))
 	return err
 }
 
